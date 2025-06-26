@@ -1,0 +1,12 @@
+id = "simfony"
+name = "Simfony"
+version = "0.1.0"
+schema_version = 1
+authors = ["Kyrylo Baibula <kyrylo.baybula@distributedlab.com>"]
+description = "Simfony Language Support"
+repository = "https://github.com/Velnbur/simfony-zed-extension"
+
+[grammars.simfony]
+#repository = "git@github.com:Velnbur/tree-sitter-simfony.git"
+repository = "/Users/velnbur/Projects/Velnbur/tree-sitter-simfony"
+rev = "main"
