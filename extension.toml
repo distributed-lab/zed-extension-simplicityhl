@@ -4,7 +4,7 @@ version = "0.1.0"
 schema_version = 1
 authors = ["Kyrylo Baibula <kyrylo.baybula@distributedlab.com>"]
 description = "Simfony Language Support"
-repository = "https://github.com/distributedlab/simfony-zed-extension"
+repository = "https://github.com/distributedlab/zed-extension-simfony"
 
 [grammars.simfony]
 repository = "git@github.com:distributedlab/tree-sitter-simfony.git"
