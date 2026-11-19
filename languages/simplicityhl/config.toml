@@ -1,4 +1,4 @@
-name = "Simfony"
+name = "SimplicityHL"
 grammar = "simplicityhl"
 path_suffixes = ["simf"]
 line_comments = ["// "]

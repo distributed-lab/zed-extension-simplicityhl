@@ -1,11 +1,14 @@
-id = "simfony"
-name = "Simfony"
+id = "simplicityhl"
+name = "SimplicityHL"
 version = "0.1.0"
 schema_version = 1
-authors = ["Kyrylo Baibula <kyrylo.baybula@distributedlab.com>"]
-description = "Simfony Language Support"
-repository = "https://github.com/distributed-lab/zed-extension-simplicityhl"
+authors = [
+    "Kyrylo Baibula <kyrylo.baybula@distributedlab.com>",
+    "Yevhen Hrubiian <yevhen.hrubian@distributedlab.com>",
+]
+description = "SimplicityHL language support"
+repository = "https://github.com/juja256/zed-extension-simplicityhl"
 
 [grammars.simplicityhl]
-repository = "git@github.com:distributed-lab/tree-sitter-simplicityhl.git"
-rev = "main"
+repository = "https://github.com/distributed-lab/tree-sitter-simplicityhl"
+rev = "4c324a61e91fc621ff49daa8f04b5d81f23755e7"
