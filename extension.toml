@@ -12,3 +12,12 @@ repository = "https://github.com/juja256/zed-extension-simplicityhl"
 [grammars.simplicityhl]
 repository = "https://github.com/distributed-lab/tree-sitter-simplicityhl"
 rev = "4c324a61e91fc621ff49daa8f04b5d81f23755e7"
+
+[language_servers.simplicityhl-lsp]
+name = "SimplicityHL Language Server"
+languages = ["SimplicityHL"]
+
+[[capabilities]]
+kind = "process:exec"
+command = "cargo"
+args = ["install", "--color", "never", "--locked", "--version", "*", "--root", "*", "simplicityhl-lsp"]
