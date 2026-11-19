@@ -86,6 +86,9 @@ or reopen the file.
   or remove nodes that `languages/simplicityhl/highlights.scm` uses. Zed then logs
   an `Invalid node type` error in `~/.local/share/zed/logs/Zed.log` and highlighting
   stops, so check the log.
+- **Change how the server is installed.** If you edit `cargo_install_args` in
+  `src/server.rs`, update the `[[capabilities]]` entry in `extension.toml` to match.
+  Zed refuses to run any command line that entry doesn't allow.
 - **Change the grammar's repository URL.** Delete the `grammars/` folder before
   reinstalling. Zed refuses to reuse a grammar checkout whose remote doesn't match
   `extension.toml`.
