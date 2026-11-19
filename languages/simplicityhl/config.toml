@@ -1,5 +1,5 @@
-name = "Simfony"
-grammar = "simfony"
+name = "SimplicityHL"
+grammar = "simplicityhl"
 path_suffixes = ["simf"]
 line_comments = ["// "]
 brackets = [
