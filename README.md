@@ -72,6 +72,10 @@ for every option. For example, to turn on the experimental `use`/`mod` syntax:
 Install the extension from a checkout with `zed: install dev extension` and pick
 this folder. Run the unit tests with `cargo test`.
 
+Reinstalling stops the language server but doesn't restart it for files that are
+already open, so only highlighting keeps working. Run `editor: restart language server`
+or reopen the file.
+
 ## Maintaining
 
 - **Bump the server.** Change `PINNED_VERSION` in `src/server.rs`, then reinstall
