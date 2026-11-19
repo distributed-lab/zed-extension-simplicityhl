@@ -1,6 +1,8 @@
 //! Pure logic for locating and installing `simplicityhl-lsp`. Nothing here
 //! calls the Zed extension API, so it runs under host `cargo test`.
 
+use serde_json::Value;
+
 /// Crate name, binary name, Zed language-server id and settings key.
 pub const SERVER_ID: &str = "simplicityhl-lsp";
 
@@ -29,9 +31,40 @@ pub fn cargo_install_args(version: &str, root: &str) -> Vec<String> {
     .collect()
 }
 
+/// Workspace configuration for the server: the user's
+/// `lsp.simplicityhl-lsp.settings`, or `{}` because the server rejects `null`.
+pub fn workspace_configuration(settings: Option<Value>) -> Value {
+    settings.unwrap_or_else(|| Value::Object(Default::default()))
+}
+
+/// Initialization options: explicit `initialization_options` win, otherwise
+/// the same `settings` the workspace configuration carries.
+pub fn initialization_options(init: Option<Value>, settings: Option<Value>) -> Option<Value> {
+    init.or(settings)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn workspace_configuration_defaults_to_empty_object() {
+        // Review Focus 1: the server rejects `null` settings.
+        assert_eq!(workspace_configuration(None), json!({}));
+        let s = json!({"simplicityhl": {"experimentalFeatures": {"imports": true}}});
+        assert_eq!(workspace_configuration(Some(s.clone())), s);
+    }
+
+    #[test]
+    fn initialization_options_prefer_explicit_then_settings() {
+        assert_eq!(
+            initialization_options(Some(json!({"a": 1})), Some(json!({"b": 2}))),
+            Some(json!({"a": 1}))
+        );
+        assert_eq!(initialization_options(None, Some(json!({"b": 2}))), Some(json!({"b": 2})));
+        assert_eq!(initialization_options(None, None), None);
+    }
 
     #[test]
     fn version_dir_names_the_server_and_version() {

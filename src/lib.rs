@@ -2,9 +2,15 @@ mod server;
 
 use std::fs;
 
-use zed_extension_api::{self as zed, LanguageServerId, LanguageServerInstallationStatus, Worktree};
+use zed_extension_api::{
+    self as zed, serde_json::Value, settings::LspSettings, LanguageServerId,
+    LanguageServerInstallationStatus, Worktree,
+};
 
-use server::{binary_path, cargo_install_args, version_dir, PINNED_VERSION};
+use server::{
+    binary_path, cargo_install_args, initialization_options, version_dir, workspace_configuration,
+    PINNED_VERSION, SERVER_ID,
+};
 
 struct SimplicityHlExtension;
 
@@ -42,6 +48,10 @@ impl SimplicityHlExtension {
     }
 }
 
+fn lsp_settings(worktree: &Worktree) -> LspSettings {
+    LspSettings::for_worktree(SERVER_ID, worktree).unwrap_or_default()
+}
+
 fn is_file(path: &str) -> bool {
     fs::metadata(path).is_ok_and(|m| m.is_file())
 }
@@ -51,12 +61,36 @@ impl zed::Extension for SimplicityHlExtension {
         SimplicityHlExtension
     }
 
+    /// Lookup order: `lsp.simplicityhl-lsp.binary.path`, then PATH, then the
+    /// managed install. The shell env lets the server find `simfmt`.
     fn language_server_command(&mut self, id: &LanguageServerId, worktree: &Worktree) -> zed::Result<zed::Command> {
-        Ok(zed::Command {
-            command: self.managed_binary(id, worktree)?,
-            args: vec![],
-            env: worktree.shell_env(),
-        })
+        let env = worktree.shell_env();
+        let binary = lsp_settings(worktree).binary;
+        if let Some(path) = binary.as_ref().and_then(|b| b.path.clone()) {
+            let args = binary.and_then(|b| b.arguments).unwrap_or_default();
+            return Ok(zed::Command { command: path, args, env });
+        }
+        if let Some(path) = worktree.which(SERVER_ID) {
+            return Ok(zed::Command { command: path, args: vec![], env });
+        }
+        Ok(zed::Command { command: self.managed_binary(id, worktree)?, args: vec![], env })
+    }
+
+    fn language_server_workspace_configuration(
+        &mut self,
+        _id: &LanguageServerId,
+        worktree: &Worktree,
+    ) -> zed::Result<Option<Value>> {
+        Ok(Some(workspace_configuration(lsp_settings(worktree).settings)))
+    }
+
+    fn language_server_initialization_options(
+        &mut self,
+        _id: &LanguageServerId,
+        worktree: &Worktree,
+    ) -> zed::Result<Option<Value>> {
+        let settings = lsp_settings(worktree);
+        Ok(initialization_options(settings.initialization_options, settings.settings))
     }
 }
 
