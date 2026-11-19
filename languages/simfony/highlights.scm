@@ -11,7 +11,7 @@
 (function_name) @function
 
 ; Types
-"bool" @type.builtin
+(bool_type) @type.builtin
 (unsigned_type) @type.builtin
 (builtin_alias) @type.builtin
 (sum_type) @type
