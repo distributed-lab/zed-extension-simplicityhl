@@ -18,7 +18,8 @@
 - The install command is `cargo install --color never --locked --version <v> --root <abs dir> simplicityhl-lsp`, run as plain `cargo`. The `--color never` flag matches the VSCode extension.
 - Every cargo command line must match a `[[capabilities]]` entry in `extension.toml` exactly. Zed rejects anything else.
 - Never write outside the extension work dir. Never touch `~/.cargo/bin`.
-- The language server is registered for the existing language `Simfony`. Don't rename it.
+- The extension id is `simplicityhl`. The language server is registered for the language `SimplicityHL`, defined in `languages/simplicityhl/config.toml`. Zed's work dir for this extension is `~/.local/share/zed/extensions/work/simplicityhl`.
+- Follow Zed's registry rules: don't bundle the server, and don't write outside the work dir.
 - Don't add HTTP calls or update checks.
 
 ## Review Focus
@@ -96,7 +97,7 @@ Create `Cargo.toml` and a `src/lib.rs` with `mod server;` so the tests compile.
 ```toml
 [language_servers.simplicityhl-lsp]
 name = "SimplicityHL Language Server"
-languages = ["Simfony"]
+languages = ["SimplicityHL"]
 
 [[capabilities]]
 kind = "process:exec"
@@ -106,10 +107,10 @@ args = ["install", "--color", "never", "--locked", "--version", "*", "--root", "
 
 - [ ] **Step 7: Build for WASM.** Run `rustup target add wasm32-wasip2 && cargo build --release --target wasm32-wasip2`. Expected: `Finished` with no errors.
 - [ ] **Step 8: Prove the install command on the host.** In the scratchpad, run `cargo install --color never --locked --version 0.9.1 --root <scratchpad>/lsp-root simplicityhl-lsp`. Expected: exit 0, and `<scratchpad>/lsp-root/bin/simplicityhl-lsp` exists. Record the wall time, since it is the first-start delay users see.
-- [ ] **Step 9: Checkpoint with the user in Zed.** The user runs `zed: install dev extension` on the repo root, then opens a `.simf` file and waits. Expected:
+- [ ] **Step 9: Checkpoint with the user in Zed.** The user first uninstalls the old "Simfony" dev extension (id `simfony`) from Zed's Extensions page, so two extensions don't both claim `.simf`. Then they run `zed: install dev extension` on the repo root, open a `.simf` file and wait. Expected:
   - `Zed.log` shows the extension compiled with no ERROR.
   - The install status appears.
-  - `~/.local/share/zed/extensions/work/simfony/simplicityhl-lsp-0.9.1/bin/simplicityhl-lsp` exists.
+  - `~/.local/share/zed/extensions/work/simplicityhl/simplicityhl-lsp-0.9.1/bin/simplicityhl-lsp` exists.
   - Hovering a jet such as `jet::eq_32` shows docs.
 
   If Zed times out or the server never starts, stop and report what `Zed.log` says.
@@ -238,6 +239,10 @@ Use `;` as the PATH separator on Windows. `env_with_cargo_bin` may take a `windo
   - Requirements: Rust 1.91+ via rustup and a C compiler. The first `.simf` open builds the server, which takes a few minutes.
   - The pinned version, `0.9.1`.
   - Using your own binary with `lsp.simplicityhl-lsp.binary.path`, or `simplicityhl-lsp` on PATH.
+  - A "Maintaining" section:
+    - To bump the server, change `PINNED_VERSION` in `src/server.rs`, then rebuild and re-check in Zed.
+    - To bump the grammar, change `rev` in `extension.toml` to the new commit SHA, then re-run the highlight query check.
+    - Bump `version` in `extension.toml` with each release.
   - A settings example:
 
 ```json

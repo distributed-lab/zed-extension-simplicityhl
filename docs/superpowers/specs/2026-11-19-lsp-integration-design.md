@@ -24,8 +24,7 @@ set it up themselves.
 - Downloading prebuilt binaries. Upstream publishes none. The code keeps the
   install step separate, so a download can be added later.
 - Go-to-definition for types, aliases or variables (the server doesn't support it).
-- Renaming the language from "Simfony" to "SimplicityHL", changing the grammar's
-  SSH URL, or supporting witness files (`.wit`).
+- Supporting witness files (`.wit`).
 
 ## Anti-goals
 
@@ -71,7 +70,25 @@ set it up themselves.
 ## Design
 
 The extension becomes a Rust extension (`Cargo.toml`, `src/lib.rs`). It registers
-the language server `simplicityhl-lsp` for the existing `Simfony` language.
+the language server `simplicityhl-lsp` for the `SimplicityHL` language.
+
+**Fork and publishing** (the user's decisions, 2026-11-19). The user maintains
+a fork at `github.com/juja256/zed-extension-simplicityhl` and aims to publish it
+to Zed's extension registry. Already done before the LSP work:
+- The extension id is now `simplicityhl` (it was `simfony`), and the extension
+  and language name is now `SimplicityHL`. Zed requires the id to name the
+  language.
+- The repo has an MIT license, with the copyright line copied from the
+  distributed-lab grammar repo.
+- The grammar uses an HTTPS URL pinned to commit `4c324a6`. The SSH URL failed
+  without GitHub SSH keys, and tracking `main` is how the upstream rename broke
+  the extension.
+
+The LSP work must stay within the registry rules:
+- The extension doesn't bundle the server.
+- It writes only to its own work dir.
+- The README documents how to bump the pinned server version and the grammar
+  commit.
 
 **Finding the binary.** The extension tries these in order and uses the first one
 that exists:
