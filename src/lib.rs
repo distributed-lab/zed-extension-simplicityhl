@@ -8,44 +8,69 @@ use zed_extension_api::{
 };
 
 use server::{
-    binary_path, cargo_install_args, initialization_options, version_dir, workspace_configuration,
-    PINNED_VERSION, SERVER_ID,
+    binary_path, cargo_install_args, cargo_missing_message, env_with_cargo_bin,
+    initialization_options, install_failed_message, newest_version_dir, stale_version_dirs,
+    stderr_tail, version_dir, workspace_configuration, PINNED_VERSION, SERVER_ID,
 };
 
 struct SimplicityHlExtension;
 
 impl SimplicityHlExtension {
     /// Returns the absolute path of the managed server binary, installing the
-    /// pinned version with cargo first if it isn't there.
+    /// pinned version with cargo first if it isn't there. If that install
+    /// fails, falls back to the newest older version that is fully installed.
     fn managed_binary(&mut self, id: &LanguageServerId, worktree: &Worktree) -> zed::Result<String> {
         let windows = zed::current_platform().0 == zed::Os::Windows;
-        let dir = version_dir(PINNED_VERSION);
-        let rel_binary = binary_path(&dir, windows);
+        let pinned_dir = version_dir(PINNED_VERSION);
+        let rel_binary = binary_path(&pinned_dir, windows);
         let work_dir = std::env::current_dir().map_err(|e| format!("no extension work dir: {e}"))?;
-        let abs_binary = work_dir.join(&rel_binary).to_string_lossy().into_owned();
+        let abs = |rel: &str| work_dir.join(rel).to_string_lossy().into_owned();
 
         if is_file(&rel_binary) {
-            return Ok(abs_binary);
+            return Ok(abs(&rel_binary));
         }
 
         zed::set_language_server_installation_status(id, &LanguageServerInstallationStatus::Downloading);
-        let root = work_dir.join(&dir).to_string_lossy().into_owned();
         let output = zed::process::Command::new("cargo")
-            .args(cargo_install_args(PINNED_VERSION, &root))
-            .envs(worktree.shell_env())
+            .args(cargo_install_args(PINNED_VERSION, &abs(&pinned_dir)))
+            .envs(env_with_cargo_bin(worktree.shell_env(), windows))
             .output();
 
         let error = match output {
             Ok(out) if out.status == Some(0) && is_file(&rel_binary) => {
                 zed::set_language_server_installation_status(id, &LanguageServerInstallationStatus::None);
-                return Ok(abs_binary);
+                for stale in stale_version_dirs(&work_dir_entries(), &pinned_dir) {
+                    let _ = fs::remove_dir_all(stale);
+                }
+                return Ok(abs(&rel_binary));
             }
-            Ok(out) => String::from_utf8_lossy(&out.stderr).into_owned(),
-            Err(err) => err,
+            Ok(out) => install_failed_message(PINNED_VERSION, &stderr_tail(&out.stderr, 20)),
+            Err(err) => cargo_missing_message(&err),
         };
+
+        // Review Focus 3: only folders whose binary exists count as installed.
+        let installed: Vec<String> = work_dir_entries()
+            .into_iter()
+            .filter(|dir| is_file(&binary_path(dir, windows)))
+            .collect();
+        if let Some(fallback) = newest_version_dir(&installed, &pinned_dir) {
+            zed::set_language_server_installation_status(id, &LanguageServerInstallationStatus::None);
+            return Ok(abs(&binary_path(&fallback, windows)));
+        }
+
         zed::set_language_server_installation_status(id, &LanguageServerInstallationStatus::Failed(error.clone()));
         Err(error)
     }
+}
+
+/// Names of the entries in the extension work dir.
+fn work_dir_entries() -> Vec<String> {
+    fs::read_dir(".")
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter_map(|entry| entry.file_name().into_string().ok())
+        .collect()
 }
 
 fn lsp_settings(worktree: &Worktree) -> LspSettings {
