@@ -7,7 +7,7 @@ authors = [
     "Yevhen Hrubiian <yevhen.hrubian@distributedlab.com>",
 ]
 description = "SimplicityHL language support"
-repository = "https://github.com/juja256/zed-extension-simplicityhl"
+repository = "https://github.com/distributed-lab/zed-extension-simplicityhl"
 
 [grammars.simplicityhl]
 repository = "https://github.com/distributed-lab/tree-sitter-simplicityhl"
